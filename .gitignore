@@ -140,3 +140,5 @@ cython_debug/
 
 logs/
 artifacts/processed
+mlruns/
+mlflow.db

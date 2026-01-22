@@ -23,8 +23,27 @@ class Loader:
             raise CustomException("Error while loading and reading data", e)
 
     @staticmethod
-    def load_processed_data(X_train_path : str , X_test_path : str , y_train_path : str , y_test_path : str ):
-        """Load processed train-test data from pickle files."""
+    def load_processed_classification_data(X_train_path : str , X_test_path : str , y_train_path : str , y_test_path : str, class_weights_path : str ):
+        """Load processed classification train-test data from pickle files."""
+        try:
+            logger.info("Loading processed data...")
+
+            X_train = joblib.load(X_train_path)
+            X_test = joblib.load(X_test_path)
+            y_train = joblib.load(y_train_path)
+            y_test = joblib.load(y_test_path)
+            class_weights = joblib.load(class_weights_path)
+
+            logger.info("Processed data loaded successfully.")
+            return X_train, X_test, y_train, y_test, class_weights
+
+        except Exception as e:
+            logger.error(f"Failed to load processed data: {e}")
+            raise CustomException("Error while loading processed data", e)
+    
+    @staticmethod
+    def load_processed_regression_data(X_train_path : str , X_test_path : str , y_train_path : str , y_test_path : str ):
+        """Load processed regression train-test data from pickle files."""
         try:
             logger.info("Loading processed data...")
 
@@ -39,6 +58,7 @@ class Loader:
         except Exception as e:
             logger.error(f"Failed to load processed data: {e}")
             raise CustomException("Error while loading processed data", e)
+        
         
 
     @staticmethod

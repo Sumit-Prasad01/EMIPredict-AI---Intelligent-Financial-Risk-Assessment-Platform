@@ -37,6 +37,7 @@ class DataProcessor:
         self.X_train_p_cl = None
         self.X_test_p_cl = None
         self.preprocessor_cl = None
+        self.class_weights = None
         # Regression
         self.X_reg = None
         self.y_reg = None
@@ -158,8 +159,8 @@ class DataProcessor:
             y = y_encoded
             )
 
-            class_weights = dict(zip(np.unique(y_encoded), class_weights_arr))
-            logger.info(f"Class weights : {class_weights}")
+            self.class_weights = dict(zip(np.unique(y_encoded), class_weights_arr))
+            logger.info(f"Class weights : {self.class_weights}")
             
             self.X_train_cl, self.X_test_cl, self.y_train_cl, self.y_test_cl = train_test_split(
                 self.X,
@@ -282,6 +283,7 @@ class DataProcessor:
             joblib.dump(self.y_test_cl, y_TEST_PATH_CL)
             joblib.dump(self.label_encoder, ENCODER_PATH_CL)
             joblib.dump(self.preprocessor_cl, PROCESSOR_PATH_CL)
+            joblib.dump(self.class_weights, CLASS_WEIGHTS_PATH)
 
             logger.info("Processed classification artifacts saved successfully.")
 
