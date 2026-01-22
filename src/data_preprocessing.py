@@ -20,24 +20,36 @@ logger = get_logger(__name__)
 
 class DataProcessor:
 
-    def __init__(self, input_path, output_path):
+    def __init__(self, input_path, output_path_cl, output_path_reg):
 
         self.input_path : str = input_path
-        self.output_path : str = output_path
+        self.output_path_cl = output_path_cl
+        self.output_path_reg = output_path_reg
         self.df = None
         self.label_encoder = None
         self.X = None
         self.y = None
-        self.y_encoded = None
-        self.X_train = None 
-        self.X_test = None
-        self.y_train = None
-        self.y_test = None
-        self.X_train_p = None
-        self.X_test_p = None
-        self.preprocessor = None
+        # Classification
+        self.X_train_cl = None 
+        self.X_test_cl = None
+        self.y_train_cl = None
+        self.y_test_cl = None
+        self.X_train_p_cl = None
+        self.X_test_p_cl = None
+        self.preprocessor_cl = None
+        # Regression
+        self.X_reg = None
+        self.y_reg = None
+        self.X_train_reg = None
+        self.X_test_reg = None
+        self.y_train_reg = None
+        self.y_test_reg = None
+        self.preprocessor_reg = None
+        self.X_train_p_reg = None
+        self.X_test_p_reg = None
 
-        os.makedirs(self.output_path, exist_ok = True)
+        os.makedirs(self.output_path_cl, exist_ok = True)
+        os.makedirs(self.output_path_reg, exist_ok = True)
 
         logger.info("Data processing initialized.")
 
@@ -135,26 +147,26 @@ class DataProcessor:
         try:
 
             self.label_encoder = LabelEncoder()
-            self.y_encoded = self.label_encoder.fit_transform(self.y)
+            y_encoded = self.label_encoder.fit_transform(self.y)
 
             label_mapping = dict(zip(self.label_encoder.classes_, range(len(self.label_encoder.classes_))))
             logger.info(f"Label mappings : {label_mapping}")
             
             class_weights_arr = compute_class_weight(
-            class_weight="balanced",
-            classes=np.unique(self.y_encoded),
-            y=self.y_encoded
+            class_weight = "balanced",
+            classes = np.unique(y_encoded),
+            y = y_encoded
             )
 
-            class_weights = dict(zip(np.unique(self.y_encoded), class_weights_arr))
+            class_weights = dict(zip(np.unique(y_encoded), class_weights_arr))
             logger.info(f"Class weights : {class_weights}")
             
-            self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
+            self.X_train_cl, self.X_test_cl, self.y_train_cl, self.y_test_cl = train_test_split(
                 self.X,
-                self.y_encoded,
+                y_encoded,
                 test_size=0.2,
                 random_state=42,
-                stratify=self.y_encoded
+                stratify=y_encoded
             )
 
             logger.info("Data encoding and class imbalancing handeled successfully.")
@@ -164,7 +176,7 @@ class DataProcessor:
             raise CustomException("Failed to encode data and handel class imbalance.", e)
         
     
-    def preprocess(self):
+    def preprocess_classification(self):
         try:
 
             categorical_features = [
@@ -192,29 +204,96 @@ class DataProcessor:
                 ("cat", cat_pipeline, categorical_features)
             ])
 
-            self.X_train_p = self.preprocessor.fit_transform(self.X_train)
-            self.X_test_p = self.preprocessor.transform(self.X_test)
+            self.X_train_p_cl = self.preprocessor.fit_transform(self.X_train_cl)
+            self.X_test_p_cl = self.preprocessor.transform(self.X_test_cl)
 
-            logger.info(f"Null Values after processing data : {np.isnan(self.X_train_p).sum()}")
+            logger.info(f"Null Values after processing classification data : {np.isnan(self.X_train_p_cl).sum()}")
 
-            logger.info("Data processing completed.")
+            logger.info("Data processing for classification completed.")
 
         except Exception as e:
-            logger.error("Error while processing data.")
-            raise CustomException("Failed to process data.", e)
+            logger.error("Error while processing classification data.")
+            raise CustomException("Failed to process classification  data.", e)
+        
+    
+
+    def preprocess_regression(self):
+        try:
+
+            self.X_reg = self.df.drop(columns=["emi_eligibility", "max_monthly_emi"])
+            self.y_reg = self.df["max_monthly_emi"]
+
+            self.X_train_reg, self.X_test_reg, self.y_train_reg, self.y_test_reg = train_test_split(
+                self.X_reg,
+                self.y_reg,
+                test_size=0.2,
+                random_state=42
+            )
+
+            categorical_features = [
+                "gender",
+                "marital_status",
+                "education",
+                "employment_type",
+                "company_type",
+                "house_type",
+                "emi_scenario"
+            ]
+
+            numerical_features = list(
+                set(self.X_reg.columns) - set(categorical_features)
+            )
+
+            num_pipeline = Pipeline([
+                ("imputer", SimpleImputer(strategy="median")),
+                ("scaler", StandardScaler())
+            ])
+
+            cat_pipeline = Pipeline([
+                ("imputer", SimpleImputer(strategy="most_frequent")),
+                ("encoder", OneHotEncoder(handle_unknown="ignore", sparse_output=False))
+            ])
+
+            self.preprocessor_reg = ColumnTransformer(
+                transformers=[
+                    ("num", num_pipeline, numerical_features),
+                    ("cat", cat_pipeline, categorical_features)
+                ]
+            )
+
+            self.X_train_p_reg = self.preprocessor_reg.fit_transform(self.X_train_reg)
+            self.X_test_p_reg = self.preprocessor_reg.transform(self.X_test_reg)
+
+           
+            logger.info(f"Null Values after processing regression data : {np.isnan(self.X_train_p_reg).sum()}")
+        
+        except Exception as e:
+            logger.error("Error while processing regression data.")
+            raise CustomException("Failed to process regression data.", e)
+
         
     
     def save_artifacts(self):
         try:
 
-            joblib.dump(self.X_train_p, X_TRAIN_PATH)
-            joblib.dump(self.X_test_p, X_TEST_PATH)
-            joblib.dump(self.y_train,y_TRAIN_PATH)
-            joblib.dump(self.y_test, y_TEST_PATH)
-            joblib.dump(self.label_encoder, ENCODER_PATH)
-            joblib.dump(self.preprocessor, PROCESSOR_PATH)
+            joblib.dump(self.X_train_p_cl, X_TRAIN_PATH_CL)
+            joblib.dump(self.X_test_p_cl, X_TEST_PATH_CL)
+            joblib.dump(self.y_train_cl,y_TRAIN_PATH_CL)
+            joblib.dump(self.y_test_cl, y_TEST_PATH_CL)
+            joblib.dump(self.label_encoder, ENCODER_PATH_CL)
+            joblib.dump(self.preprocessor_cl, PROCESSOR_PATH_CL)
 
-            logger.info("Processed artifacts saved successfully.")
+            logger.info("Processed classification artifacts saved successfully.")
+
+            joblib.dump(self.X_train_p_reg, X_TRAIN_PATH_REG)
+            joblib.dump(self.X_test_p_reg, X_TEST_PATH_REG)
+            joblib.dump(self.y_train_reg,y_TRAIN_PATH_REG)
+            joblib.dump(self.y_test_reg, y_TEST_PATH_REG)
+            joblib.dump(self.label_encoder, ENCODER_PATH_REG)
+            joblib.dump(self.preprocessor_reg, PROCESSOR_PATH_REG)
+
+            logger.info("Processed regression artifacts saved successfully.")
+
 
         except Exception as e:
             logger.error("Error while saving processed artifacts.")
@@ -230,7 +309,8 @@ class DataProcessor:
             self.feature_engineering()
             self.split_data()
             self.encode_and_handel_imbalance_data()
-            self.preprocess()
+            self.preprocess_classification()
+            self.preprocess_regression()
             self.save_artifacts()
 
             logger.info("Data processing pipeline ran successfully.")
@@ -243,5 +323,5 @@ class DataProcessor:
 
 if __name__ == "__main__":
 
-    data_processor = DataProcessor(RAW_DATA_PATH, PROCESSED_DATA_PATH)
+    data_processor = DataProcessor(RAW_DATA_PATH, PROCESSED_DATA_PATH_CL, PROCESSED_DATA_PATH_REG)
     data_processor.run()
