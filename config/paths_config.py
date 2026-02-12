@@ -30,10 +30,6 @@ PROCESSOR_PATH_REG = os.path.join(PROCESSED_DATA_PATH_REG, "processor.pkl")
 
 
 
-
-
-
-
 # load path(classification)
 X_TRAIN_LOAD_PATH_CL = 'artifacts/processed/classification/X_train.pkl'
 X_TEST_LOAD_PATH_CL = 'artifacts/processed/classification/X_test.pkl'
@@ -43,8 +39,8 @@ CLASS_WEIGHTS_PATH_CL = 'artifacts/processed/classification/class_weights.pkl'
 
 # load path(regression)
 
-# ENCODER_PATH = 'artifacts/processed/encoder.pkl'
-# PROCESSOR_PATH = 'artifacts/processed/processor.pkl'
+ENCODER_PATH = 'artifacts/processed/encoder.pkl'
+PROCESSOR_PATH = 'artifacts/processed/processor.pkl'
 
 
 
@@ -52,4 +48,19 @@ CLASS_WEIGHTS_PATH_CL = 'artifacts/processed/classification/class_weights.pkl'
 CL_MODEL_PATH = "artifacts/models"
 os.makedirs(CL_MODEL_PATH, exist_ok=True)
 SAVE_CL_MODEL_PATH = os.path.join(CL_MODEL_PATH, "cl_model.pkl")
-SAVED_CL_MODEL_PATH = "artifacts/models/cl_model.pkl.pkl"
+SAVED_CL_MODEL_PATH = "artifacts/models/cl_model.pkl"
+
+
+# Regression Model Path
+
+REG_MODEL_PATH = "artifacts/models"
+os.makedirs(REG_MODEL_PATH, exist_ok=True)
+SAVE_REG_MODEL_PATH = os.path.join(REG_MODEL_PATH, "reg_model.pkl")
+SAVED_REG_MODEL_PATH = "artifacts/models/reg_model.pkl"
+
+
+# INFERENCE PATHS
+
+REG_PREPROCESSOR = "artifacts/processed/classification/processor.pkl"
+CL_PREPROCESSOR = "artifacts/processed/classification/processor.pkl"
+ENCODER = "artifacts/processed/classification/encoder.pkl"

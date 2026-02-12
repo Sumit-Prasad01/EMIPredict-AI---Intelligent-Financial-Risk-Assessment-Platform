@@ -17,3 +17,13 @@ RANDOM_SEARCH_PARAMS = {
     "random_state" : 42,
     "scoring" : "accuracy"
 }
+
+
+RANDOM_SEARCH_PARAMS_REGRESSION  = {
+    'n_iter' : 4,
+    'cv' : 2,
+    'n_jobs' : -1,
+    "verbose" : 2,
+    "random_state" : 42,
+    "scoring" : "neg_mean_squared_error"
+}

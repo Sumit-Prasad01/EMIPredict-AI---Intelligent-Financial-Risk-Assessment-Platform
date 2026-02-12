@@ -200,21 +200,21 @@ class DataProcessor:
                 ("encoder", OneHotEncoder(handle_unknown="ignore", sparse_output=False))
             ])
 
-            self.preprocessor = ColumnTransformer([
+            self.preprocessor_cl = ColumnTransformer([
                 ("num", num_pipeline, numerical_features),
                 ("cat", cat_pipeline, categorical_features)
             ])
 
-            self.X_train_p_cl = self.preprocessor.fit_transform(self.X_train_cl)
-            self.X_test_p_cl = self.preprocessor.transform(self.X_test_cl)
+            self.X_train_p_cl = self.preprocessor_cl.fit_transform(self.X_train_cl)
+            self.X_test_p_cl = self.preprocessor_cl.transform(self.X_test_cl)
 
             logger.info(f"Null Values after processing classification data : {np.isnan(self.X_train_p_cl).sum()}")
-
             logger.info("Data processing for classification completed.")
 
         except Exception as e:
             logger.error("Error while processing classification data.")
             raise CustomException("Failed to process classification  data.", e)
+
         
     
 

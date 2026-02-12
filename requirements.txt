@@ -7,3 +7,4 @@ joblib
 requests
 lightgbm
 mlflow
+streamlit
