@@ -1,4 +1,7 @@
 from src.data_ingestion import DataIngestion
+from src.data_preprocessing import DataProcessor
+from src.model_training_regression import TrainRegressionModel
+from src.model_training_classification import TrainClassificationModel
 from src.logger import get_logger
 from src.custom_exception import CustomException
 from config.paths_config import *
@@ -7,26 +10,23 @@ logger = get_logger(__name__)
 
 class TrainingPipeline:
 
-    def __init__(self, drive_link : str):
-        
-        self.drive_link = drive_link
-
     def run_pipeline(self):
 
         try:
             logger.info("Training pipeline initialized successfully.")
 
-            # Data Ingestion
-            logger.info("Data Ingestion Started.")
-
-            ingest = DataIngestion(share_url = self.drive_link)
+            ingest = DataIngestion(GDRIVE_LINK)
             ingest.download_file()
 
-            logger.info("Data ingestion completed.")
+            data_processor = DataProcessor(RAW_DATA_PATH, PROCESSED_DATA_PATH_CL, PROCESSED_DATA_PATH_REG)
+            data_processor.run()
 
-            # Data Preprocessing
-            logger.info("Data Processing started.")
-            logger.info("Data processing completed.")
+            trainer = TrainClassificationModel(SAVE_CL_MODEL_PATH)
+            trainer.run()
+
+            trainer = TrainRegressionModel(SAVE_REG_MODEL_PATH)
+            trainer.run()
+
 
             logger.info("Training pipeline completed successfully.")
 
@@ -38,5 +38,5 @@ class TrainingPipeline:
 
 if __name__ == "__main__":
 
-    trainer = TrainingPipeline(GDRIVE_LINK)
+    trainer = TrainingPipeline()
     trainer.run_pipeline()
