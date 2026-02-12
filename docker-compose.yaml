@@ -1,0 +1,26 @@
+version: "3.9"
+
+services:
+  fastapi:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: emipredict_fastapi
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/app
+    restart: always
+
+  streamlit:
+    build:
+      context: .
+      dockerfile: Dockerfile.streamlit
+    container_name: emipredict_streamlit
+    ports:
+      - "8501:8501"
+    depends_on:
+      - fastapi
+    volumes:
+      - .:/app
+    restart: always
